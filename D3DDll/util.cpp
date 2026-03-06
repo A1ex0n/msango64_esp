@@ -328,7 +328,10 @@ HWND g_hTarWnd = FindWindowA(NULL, "梦三国2 Online");
 
 //HWND g_hTarWnd = FindWindowA(NULL, "D3D Tutorial");
 //世界坐标转屏幕坐标
-DWORD64 g_pEcx = (DWORD64)GetProcAddress(GetModuleHandleA("Engine.dll"), "?g_pkGraphic@@3PEAVIGraph@@EA");//
+//地址=00007FFF6BC7C998
+//class IGraph *g_pkGraphic
+DWORD64 g_pRcx = (DWORD64)GetProcAddress(GetModuleHandleA("Engine.dll"), "?g_pkGraphic@@3PEAVIGraph@@EA");//
+//public: void __cdecl IGraph::GetScreenPosition(struct D3DXVECTOR3 const &, struct D3DXVECTOR2 &)
 DWORD64 g_pFun = (DWORD64)GetProcAddress(GetModuleHandleA("Engine.dll"), "?GetScreenPosition@IGraph@@QEAAXAEBUD3DXVECTOR3@@AEAUD3DXVECTOR2@@@Z");
 //小地图坐标转换
 vec2 TransMinimap(vec2 strWorld)//小地图边框厚度也有影响
@@ -342,42 +345,34 @@ vec2 TransMinimap(vec2 strWorld)//小地图边框厚度也有影响
     d3dRet.y = (float)(166.0 - 166.0 / 17300.0 * strWorld.y - 91.0 + Height - g_offY);
     return(d3dRet);
 }
+extern "C" float __stdcall CallGetZAsm(unsigned __int64 a1, float a2, float a3, unsigned __int64 fn);
+extern "C" void __stdcall CallWorldToScreenAsm(unsigned __int64 dwRcx, const vec3* pPos, vec2* pScreen, unsigned __int64 fn);
+
 //call内部函数，获取z坐标
-float GetZ(DWORD myecx, float x, float y)
+float GetZ(DWORD64 tmpEcx, float x, float y)
 {
-    ////fstp dword ptr ss:[esp+0x1C], st0
-    float res = 0.0;
-    //DWORD pGetPos = msango::CGame::getInstance().m_addr[msango::GetPosZ];
-    //__asm
-    //{
-    //    push eax
-    //    mov eax, [pGetPos]
-    //    push y
-    //    push x
-    //    mov ecx, [myecx]
-    //    call eax
-    //    pop eax
-    //    fstp[res]
-    //}
-    return res;
+
+    // x64 下用独立 MASM 调用桩，按 Win64 ABI：
+    //   RCX=a1(tmpEcx), XMM1=x, XMM2=y, R9=fn
+
+    const unsigned __int64 fn = msango::CGame::getInstance().m_addr[msango::GetPosZ];
+    if (!fn || !tmpEcx)
+        return 0.0f;
+
+    return CallGetZAsm(tmpEcx, x, y, fn);
 }
 //call内部函数，转换屏幕坐标
-BOOL WorldToScreen(vec3& pos, vec2& screen)
+void WorldToScreen(vec3& pos, vec2& screen)
 {
-    //CMemoryManager mem;
-    //DWORD dwEcx = mem.RVM<DWORD>(g_pEcx);
-    DWORD res = 0;
-    //__asm
-    //{
-    //    mov ecx, [dwEcx]
-    //    push screen
-    //    push pos
-    //    mov eax, g_pFun
-    //    call eax
-    //    mov[res], eax
-    //}
+    if (!g_pRcx || !g_pFun)
+        return;
+    CMemoryManager mem;
+    DWORD dwEcx = mem.RVM<DWORD>(g_pRcx);
+    // x64：asm 调用桩内部执行：mov rcx, [dwEcx]，然后 call g_pFun
+    // 参数映射（Win64 ABI）：RCX=dwEcx, RDX=&pos, R8=&screen, R9=fn
+    CallWorldToScreenAsm(g_pRcx, &pos, &screen, g_pFun);
+ 
 
-    return res;
 }
 //计算大地图偏移
 vec2 calculateThirdPoint(const vec2& pHome, const vec2& point2, float distance)
@@ -410,48 +405,64 @@ void DrawFun()
         Draw_Text(150, float(300 + i * 35),infoStrings[i].c_str(),ImColor(255,0,0));
     }
 
-    //CMemoryManager mem;
-    //if (g_GameVars.isGet && g_GameVars.isSus)
-    //{
-    //    vec2 tmpD3D = { 0 };
-    //    tmpD3D = TransMinimap(g_HeroWorldPoint);
-    //    //小地图
-    //    DrawCircle(tmpD3D.x, tmpD3D.y,6.2f, ImColor(0, 255, 0));
-    //    //大地图
-    //    DWORD tmpEcx = mem.RVM<DWORD>(g_SelfHeroObject + 0X10);//0X10
-    //    if (tmpEcx){
-    //        tmpEcx = mem.RVM<DWORD>(tmpEcx + 0C930h);//0C930h
-    //        if (tmpEcx){
-    //            tmpEcx = mem.RVM<DWORD>(tmpEcx + 0X10);//0X10
-    //            if (tmpEcx){
-    //                vec3 worldV3 = { 0 };
-    //                worldV3.x = g_HeroWorldPoint.x;
-    //                worldV3.y = g_HeroWorldPoint.y;
-    //                vec3 homev3 ;
-    //                if (g_GameVars.isWu)
-    //                {
-    //                    homev3.x = g_homewu.x;
-    //                    homev3.y = g_homewu.y;
-    //                }
-    //                else
-    //                {
-    //                    homev3.x = g_homewei.x;
-    //                    homev3.y = g_homewei.y;
-    //                }
-    //                vec2 tmpv2= calculateThirdPoint({ homev3.x,homev3.y }, { worldV3.x, worldV3.y }, g_BigMapoff);
-    //                vec3 relPointV3 = { 0 };
-    //                relPointV3.x = tmpv2.x;
-    //                relPointV3.y = tmpv2.y;
-    //                relPointV3.z = GetZ(tmpEcx,relPointV3.x, relPointV3.y);
-    //                vec2 screenV2 = { 0 };
-    //                if (WorldToScreen(relPointV3, screenV2)){
+    CMemoryManager mem;
+   if (g_GameVars.isGet && g_GameVars.isSus)
+   {
+       vec2 tmpD3D = { 0 };
+       tmpD3D = TransMinimap(g_HeroWorldPoint);
+       //小地图
+       DrawCircle(tmpD3D.x, tmpD3D.y,6.2f, ImColor(0, 255, 0));
+       //大地图  1.计算z坐标2.世界坐标转屏幕坐标
 
-    //                    DrawCircle(screenV2.x, screenV2.y,6.2f, ImColor(255,0,0));
-    //                }                                               
-    //            }
-    //        }
-    //    }
-    //}
+       /*
+        tmpecx的来源
+        .text:000000014132C2E7                 mov     rcx, cs:?g_pkMap@@3PEAVIMap@@EA ; IMap * g_pkMap
+.text:000000014132C2EE                 mov     rcx, [rcx]
+.text:000000014132C2F1                 call    cs:?GetPickTerrain@IMap@@QEAAXAEAM0HH@Z ; IMap::GetPickTerrain(float &,float &,int,int)
+.text:000000014132C2F7                 mov     rdx, cs:qword_147155070
+.text:000000014132C2FE                 mov     rcx, [rdx+0C930h]
+.text:000000014132C305                 movss   xmm2, [rsp+268h+var_1C8]
+.text:000000014132C30E                 movss   xmm1, dword ptr [rsp+268h+var_200]
+.text:000000014132C314                 mov     rcx, [rcx+10h]
+.text:000000014132C318                 call    sub_144A28600
+.text:000000014132C31D                 movaps  xmm6, xmm0
+.text:000000014132C320                 mov     rax, cs:qword_147155070
+       
+       */
+      DWORD64 dwBaseAddress = mem.RVM<DWORD64>(msango::CGame::getInstance().m_addr[msango::GameBase]);
+  
+       if (dwBaseAddress){
+           DWORD64 tmpEcx = mem.RVM<DWORD64>(dwBaseAddress + 0xC930);//0C930h
+           if (tmpEcx){
+               tmpEcx = mem.RVM<DWORD64>(tmpEcx + 0X10);//0X10
+               if (tmpEcx){
+                   vec3 worldV3 = { 0 };
+                   worldV3.x = g_HeroWorldPoint.x;
+                   worldV3.y = g_HeroWorldPoint.y;
+                   vec3 homev3 ;
+                   if (g_GameVars.isWu)
+                   {
+                       homev3.x = g_homewu.x;
+                       homev3.y = g_homewu.y;
+                   }
+                   else
+                   {
+                       homev3.x = g_homewei.x;
+                       homev3.y = g_homewei.y;
+                   }
+                   vec2 tmpv2= calculateThirdPoint({ homev3.x,homev3.y }, { worldV3.x, worldV3.y }, g_BigMapoff);
+                   vec3 relPointV3 = { 0 };
+                   relPointV3.x = tmpv2.x;
+                   relPointV3.y = tmpv2.y;
+                   relPointV3.z = GetZ(tmpEcx,relPointV3.x, relPointV3.y);
+                   vec2 screenV2 = { 0 };   
+                   WorldToScreen(relPointV3, screenV2);
+                   DrawCircle(screenV2.x, screenV2.y,6.2f, ImColor(255,0,0));
+                
+               }
+           }
+       }
+   }
 }
 //开始绘制
 int InitImgui(HWND hwnd, LPDIRECT3DDEVICE9 pDevice)
@@ -536,7 +547,7 @@ HotKeyInfo hotkeys[] = {
     {195, MOD_ALT | MOD_NOREPEAT, VK_HOME},//Home键 总开关
     {196, MOD_ALT | MOD_NOREPEAT, 0x31},//Alt+1 临时开关
     {197, MOD_ALT | MOD_NOREPEAT, 0x32},//Alt+2 切换目标
-    {198, MOD_ALT | MOD_NOREPEAT, 0x34},//Alt+4 切换自身下标
+    {198, MOD_ALT | MOD_NOREPEAT, 0x33},//Alt+3 切换自身下标
     {199, MOD_ALT | MOD_NOREPEAT, VK_INSERT},//Alt+Insert 切换自身阵营
     //微调小地图偏移
     {200, MOD_ALT | MOD_NOREPEAT, VK_NUMPAD1},//小键盘1 向右
@@ -559,7 +570,7 @@ void OnHotKey(int id) {
     case 197://Alt+2 切换目标
         g_GameVars.TarIndex = (g_GameVars.TarIndex + 1) % 5;
         break;
-    case 198://Alt+4 切换自身下标
+    case 198://Alt+3 切换自身下标
         g_GameVars.selfIndex = (g_GameVars.selfIndex + 1) % 10;
         g_GameVars.isWu = g_GameVars.selfIndex > 4 ? false : true;
         break;
@@ -625,24 +636,24 @@ void RegHotKey()
 //原流程
 extern "C" DWORD64 pRelWritePetPoint=0;
 extern "C" DWORD64 pRelWritePetPointRJ=0;
-int  __stdcall cmpfloat(float x, float y)
-{
-    //mov ecx, 0x0C5CB20CC; f2
-    if (g_GameVars.isWu)//是吴国
-    {
-        if (x > -6500.0f || y > -6500.0f)
-        {
-            return 0;
-        }
-        return -1;
-    }
-    else//是魏国
-    {
-        if (x < 6300.0f || y < 6300.0f)
-        {
-            return 0;
-        }
-        return -1;
-    }
+// int  __stdcall cmpfloat(float x, float y)
+// {
+//     //mov ecx, 0x0C5CB20CC; f2
+//     if (g_GameVars.isWu)//是吴国
+//     {
+//         if (x > -6500.0f || y > -6500.0f)
+//         {
+//             return 0;
+//         }
+//         return -1;
+//     }
+//     else//是魏国
+//     {
+//         if (x < 6300.0f || y < 6300.0f)
+//         {
+//             return 0;
+//         }
+//         return -1;
+//     }
 
-}
+// }

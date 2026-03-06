@@ -109,5 +109,11 @@
     <MASM Include="PetMoveCall.asm">
       <Filter>源文件</Filter>
     </MASM>
+    <MASM Include="GetZCall.asm">
+      <Filter>源文件</Filter>
+    </MASM>
+    <MASM Include="WorldToScreenCall.asm">
+      <Filter>源文件</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

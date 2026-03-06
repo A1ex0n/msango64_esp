@@ -201,6 +201,8 @@
       <FileType>Document</FileType>
     </MASM>
     <MASM Include="PetMoveCall.asm" />
+    <MASM Include="GetZCall.asm" />
+    <MASM Include="WorldToScreenCall.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

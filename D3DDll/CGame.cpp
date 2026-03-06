@@ -4,19 +4,13 @@
 #include "xorstr.hpp"
 #include "./minhook/include/MinHook.h"
 // Match MinHook library to platform + CRT (Debug vs Release) to avoid MSVCRT conflicts.
-#if defined(_WIN64)
-  #if defined(_DEBUG)
-    #pragma comment(lib,"./minhook/lib/libMinHook-x64-v141-mdd.lib")
-  #else
-    #pragma comment(lib,"./minhook/lib/libMinHook-x64-v141-md.lib")
-  #endif
+
+#if defined(_DEBUG)
+#pragma comment(lib,"./minhook/lib/libMinHook-x64-v141-mdd.lib")
 #else
-  #if defined(_DEBUG)
-    #pragma comment(lib,"./minhook/lib/libMinHook-x86-v141-mdd.lib")
-  #else
-    #pragma comment(lib,"./minhook/lib/libMinHook-x86-v141-md.lib")
-  #endif
+#pragma comment(lib,"./minhook/lib/libMinHook-x64-v141-md.lib")
 #endif
+
 bool msango::CGame::Init()
 {
     if (!InitBase())
@@ -93,10 +87,3 @@ bool msango::CGame::HookPet()
 
 }
 
-
-//extern "C" void *relCRC=nullptr;
-//bool msango::CGame::BypassCRC()
-//{
-//
-//    return true;
-//}
