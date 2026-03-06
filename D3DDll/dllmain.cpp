@@ -1,6 +1,5 @@
 ﻿#include <thread>
 #include "util.h"
-#include "common.h"
 #include "xorstr.hpp"
 //x64版本无需处理CRC 没启用
 /*

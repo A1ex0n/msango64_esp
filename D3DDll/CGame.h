@@ -20,7 +20,7 @@ namespace msango
         ULONG32 enu;
         const char* pattern;
         const char* moduleName;
-        int offset;
+        DWORD64 offset;
         BOOL isptr;
         const char* description;
     } STRUCT_PARTTERN, * PSTRUCT_PARTTERN;

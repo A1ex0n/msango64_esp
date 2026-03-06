@@ -55,6 +55,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -166,7 +167,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CGame.h" />
-    <ClInclude Include="common.h" />
     <ClInclude Include="draw\draw.h" />
     <ClInclude Include="draw\imgui\imconfig.h" />
     <ClInclude Include="draw\imgui\imgui.h" />
@@ -177,14 +177,12 @@
     <ClInclude Include="draw\imgui_impl_dx9.h" />
     <ClInclude Include="draw\imgui_impl_win32.h" />
     <ClInclude Include="dxhook\dxhook.h" />
-    <ClInclude Include="global_hero_array.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="xorstr.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CGame.cpp" />
-    <ClCompile Include="common.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="draw\draw.cpp" />
     <ClCompile Include="draw\imgui\imgui.cpp" />
@@ -196,7 +194,16 @@
     <ClCompile Include="dxhook\dxhook.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <MASM Include="HookPetMove.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </MASM>
+    <MASM Include="PetMoveCall.asm" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
   </ImportGroup>
 </Project>

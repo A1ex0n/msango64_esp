@@ -38,20 +38,36 @@ struct HotKeyInfo {
 };
 
 
-extern GameVariables g_GameVars;
+// These globals are referenced from MASM (.asm). MASM expects undecorated names,
+// so we must give them C linkage to avoid C++ name mangling.
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-extern LPVOID pRelWritePetPoint;
-extern LPVOID pRelWritePetPointRJ;
+extern GameVariables g_GameVars;
+extern vec2 g_HeroWorldPoint;
+extern DWORD64 g_CurrrentObject;
+extern DWORD64 g_SelfHeroObject;
+
+extern vec2 g_homewu;
+extern vec2 g_homewei;
+
+extern  DWORD64 pRelWritePetPoint;
+extern  DWORD64 pRelWritePetPointRJ;
+
+#ifdef __cplusplus
+}
+#endif
 void GetPointByHeroID();
 
 extern "C" void HookPetMove();
+extern "C" void HookPetMoveRJ();
 
 void MOutputDebugStringExA(const char* strOutputString, ...);
 void MOutputDebugStringExW(const wchar_t* strOutputString, ...);
 void RegHotKey();
 void StartDrawWindow();
 DWORD GetModuleLen(HMODULE hModule);
-DWORD64 ScanPattern(const char* markCode, int nOffset, LPCSTR handle=NULL);
+DWORD64 ScanPattern(const char* markCode, DWORD64 nOffset, LPCSTR handle=NULL);
 
 bool  InitCRC();
-//void  HookPetMoveRJ();

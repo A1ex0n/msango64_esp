@@ -3,7 +3,20 @@
 #include "MemoryManager.h"
 #include "xorstr.hpp"
 #include "./minhook/include/MinHook.h"
-#pragma comment(lib,"./minhook/lib/libMinHook-x64-v140-md.lib")
+// Match MinHook library to platform + CRT (Debug vs Release) to avoid MSVCRT conflicts.
+#if defined(_WIN64)
+  #if defined(_DEBUG)
+    #pragma comment(lib,"./minhook/lib/libMinHook-x64-v141-mdd.lib")
+  #else
+    #pragma comment(lib,"./minhook/lib/libMinHook-x64-v141-md.lib")
+  #endif
+#else
+  #if defined(_DEBUG)
+    #pragma comment(lib,"./minhook/lib/libMinHook-x86-v141-mdd.lib")
+  #else
+    #pragma comment(lib,"./minhook/lib/libMinHook-x86-v141-md.lib")
+  #endif
+#endif
 bool msango::CGame::Init()
 {
     if (!InitBase())
@@ -42,6 +55,7 @@ bool msango::CGame::InitBase()
     for (ULONG32 i = 0; i < GetPosZ + 1; i++)
     {
         m_addr[i] = ScanPattern(msgPartterns[i].pattern, msgPartterns[i].offset, msgPartterns[i].moduleName);
+        MOutputDebugStringExA("[MSG]  m_addr %s:  %llX\r", msgPartterns[i].description, m_addr[i]);
         if (msgPartterns[i].isptr)
         {
             CMemoryManager memman;
@@ -50,7 +64,7 @@ bool msango::CGame::InitBase()
 
         }
 
-        MOutputDebugStringExA("[MSG] %s: %08X\r", msgPartterns[i].description, m_addr[i]);
+        MOutputDebugStringExA("[MSG]  %s:  %llX\r", msgPartterns[i].description, m_addr[i]);
 
     }
 
@@ -60,16 +74,16 @@ bool msango::CGame::InitBase()
 
 bool msango::CGame::HookPet()
 {
-    if (MH_CreateHook((LPVOID)m_addr[msango::HookAddr], &HookPetMove, &pRelWritePetPoint) != MH_OK)
+    if (MH_CreateHook((LPVOID)m_addr[msango::HookAddr], &HookPetMove, (LPVOID*)&pRelWritePetPoint) != MH_OK)
     {
         MOutputDebugStringExA("[MSG] HookPetPointChange MH_CreateHook  ERROR");
         return false;
     }
-    //if (MH_CreateHook((LPVOID)m_addr[msango::HookAddrRJ], &HookPetMoveRJ, &pRelWritePetPointRJ) != MH_OK)
-    //{
-    //    MOutputDebugStringExA("[MSG] HookPetPointChangeRJ MH_CreateHook  ERROR");
-    //    return false;
-    //}
+    if (MH_CreateHook((LPVOID)m_addr[msango::HookAddrRJ], &HookPetMoveRJ, (LPVOID*)&pRelWritePetPointRJ) != MH_OK)
+    {
+        MOutputDebugStringExA("[MSG] HookPetPointChangeRJ MH_CreateHook  ERROR");
+        return false;
+    }
     if (MH_EnableHook(MH_ALL_HOOKS) != MH_OK)
     {
         MOutputDebugStringExA("[MSG] StartHookPet MH_EnableHook  ERROR");

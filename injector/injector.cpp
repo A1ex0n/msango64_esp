@@ -45,9 +45,10 @@ void InjectDll(DWORD processid, const std::string& dllPath)
                 WaitForSingleObject(hThread, INFINITE);
                 CloseHandle(hThread);
             }
-
+        }
         // Free the memory
         VirtualFreeEx(hProcess, remoteMemory, 0, MEM_RELEASE);
+
     }
     CloseHandle(hProcess);
 }
@@ -59,7 +60,7 @@ int main(int argc, char* argv[])
         return 1;
     }
     std::string dllPath = argv[1];
-    DWORD processid = GetProcessIdByName(L"Msango.bin");
+    DWORD processid = GetProcessIdByName(L"MSango.bin");
     if (processid > 0)
     {
         InjectDll(processid, dllPath);

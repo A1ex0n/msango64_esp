@@ -66,12 +66,6 @@
     <ClInclude Include="dxhook\dxhook.h">
       <Filter>源文件\dxhook</Filter>
     </ClInclude>
-    <ClInclude Include="common.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="global_hero_array.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -107,8 +101,13 @@
     <ClCompile Include="dxhook\dxhook.cpp">
       <Filter>源文件\dxhook</Filter>
     </ClCompile>
-    <ClCompile Include="common.cpp">
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="HookPetMove.asm">
       <Filter>源文件</Filter>
-    </ClCompile>
+    </MASM>
+    <MASM Include="PetMoveCall.asm">
+      <Filter>源文件</Filter>
+    </MASM>
   </ItemGroup>
 </Project>
